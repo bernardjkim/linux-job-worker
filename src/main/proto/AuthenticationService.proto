@@ -1,0 +1,13 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package ljworker;
+
+message AuthenticateRequest {
+}
+
+message AuthenticateResponse {
+}
+
+service AuthenticationService {
+    rpc authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+}
