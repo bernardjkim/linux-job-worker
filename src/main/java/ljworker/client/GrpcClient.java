@@ -15,7 +15,6 @@ class GrpcClient {
     public GrpcClient(String host, int port) {
         this.host = host;
         this.port = port;
-        init();
     }
 
     /** Initialize gRPC connection. */
@@ -48,7 +47,7 @@ class GrpcClient {
      * 
      * @param args Start RPC arguments
      */
-    public void start(String args) {
+    public void start(String[] args) {
         // TODO: start RPC
     }
 
@@ -57,7 +56,7 @@ class GrpcClient {
      * 
      * @param args Stop RPC arguments
      */
-    public void stop(String args) {
+    public void stop(String[] args) {
         // TODO: stop RPC
     }
 
@@ -66,7 +65,7 @@ class GrpcClient {
      * 
      * @param args Status RPC arguments
      */
-    public void status(String args) {
+    public void status(String[] args) {
         // TODO: status RPC
     }
 
