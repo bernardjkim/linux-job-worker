@@ -1,5 +1,7 @@
 package ljworker.client;
 
+import javax.net.ssl.SSLException;
+
 public class App {
     // TODO: these constants could be variables received from user args at runtime
     private static final String HOST = "localhost";
@@ -18,10 +20,8 @@ public class App {
         System.out.printf("\t%s\t<process id>\n", STATUS);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SSLException {
         GrpcClient connection = new GrpcClient(HOST, PORT);
-        // TODO: not exactly sure how to handle auth yet.
-        // String token = "";
 
         if (args.length < 2) {
             printUsage();

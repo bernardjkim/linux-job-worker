@@ -1,13 +1,25 @@
 package ljworker.client;
 
+import java.io.File;
+import javax.net.ssl.SSLException;
 import io.grpc.ManagedChannel;
+import io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.NegotiationType;
 import io.grpc.netty.NettyChannelBuilder;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 
 /**
  * gRPC client interface. This client interface allows a user to send
  * start/stop/status requests to a connected LinuxJobWorker.
  */
 class GrpcClient {
+    // TODO: if service is open to public might consider using a trusted CA.
+    // for now we are just using self signed certificates.
+    private static File keyCertChainFile = new File("sslcert/client.crt");
+    private static File keyFile = new File("sslcert/client.pem");
+    private static File trustCertCollectionFile = new File("sslcert/ca.crt");
+
     private ManagedChannel channel;
     private String host;
     private int port;
@@ -18,10 +30,19 @@ class GrpcClient {
     }
 
     /** Initialize gRPC connection. */
-    public void init() {
+    public void init() throws SSLException {
+
+        // Initialize the SSL context to use for encryption
+        // REF: https://github.com/grpc/grpc-java/tree/master/examples/example-tls
+        SslContextBuilder builder = GrpcSslContexts.forClient();
+        builder.trustManager(trustCertCollectionFile);
+        builder.keyManager(keyCertChainFile, keyFile);
+        SslContext sslContext = builder.build();
+
+        // Initialize connection to ther server
         this.channel = NettyChannelBuilder.forAddress(host, port)
-                // TODO: setup TLS/SSL encryption. RPCs sent as plain text for now.
-                .usePlaintext()
+                .negotiationType(NegotiationType.TLS)
+                .sslContext(sslContext)
                 .build();
     }
 
