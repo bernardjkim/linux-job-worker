@@ -1,7 +1,6 @@
 package ljworker.client;
 
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.SSLException;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.NettyChannelBuilder;
 

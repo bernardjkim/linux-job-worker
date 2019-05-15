@@ -1,6 +1,6 @@
 package ljworker.client;
 
-public class App {
+public class Client {
     // Command string constants
     private static final String START = "start";
     private static final String STOP = "stop";
