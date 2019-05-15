@@ -8,9 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Test client-server mutual TLS authentication.
- */
+/** Test client-server mutual TLS authentication. */
 @RunWith(JUnit4.class)
 public class AuthTest {
   /**

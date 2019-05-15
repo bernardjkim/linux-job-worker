@@ -43,7 +43,7 @@ public class GrpcClient {
         // Initialize connection to ther server
         this.channel = NettyChannelBuilder.forAddress(HOST, PORT)
                 .negotiationType(NegotiationType.TLS)
-                .sslContext(getSslContext())
+                .sslContext(getSslContext()) // SSL context for encryption
                 .build();
         blockingStub = LinuxJobServiceGrpc.newBlockingStub(channel);
     }

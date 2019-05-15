@@ -27,7 +27,7 @@ public class App {
         GrpcClient connection = new GrpcClient("sslcert/client.crt", "sslcert/client.pem", "sslcert/ca.crt");
         try {
             connection.init();
-        } catch (SSLException e1) {
+        } catch (SSLException e) {
             logger.info("Invalid SSL context");
             return;
         }
