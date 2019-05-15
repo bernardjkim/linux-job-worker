@@ -24,6 +24,11 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
     }
 
     @Override
+    public void startStream(StartRequest req, StreamObserver<StartResponse> responseObserver) {
+        // TODO: handle start stream RPC
+    }
+
+    @Override
     public void stop(StopRequest req, StreamObserver<StopResponse> responseObserver) {
         // TODO: handle stop RPC
     }
