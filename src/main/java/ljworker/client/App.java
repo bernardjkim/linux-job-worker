@@ -1,12 +1,10 @@
 package ljworker.client;
 
+import java.util.logging.Logger;
 import javax.net.ssl.SSLException;
 
 public class App {
-    // TODO: these constants could be variables received from user args at runtime
-    private static final String HOST = "localhost";
-    private static final int PORT = 8443;
-
+    private static final Logger logger = Logger.getLogger(App.class.getName());
     // Command string constants
     private static final String START = "start";
     private static final String STOP = "stop";
@@ -20,23 +18,29 @@ public class App {
         System.out.printf("\t%s\t<process id>\n", STATUS);
     }
 
-    public static void main(String[] args) throws SSLException {
-        GrpcClient connection = new GrpcClient(HOST, PORT);
-
+    public static void main(String[] args) throws InterruptedException {
         if (args.length < 2) {
             printUsage();
-        } else {
-            connection.init();
-            if (START.equals(args[0])) {
-                connection.start(args);
-            } else if (STOP.equals(args[0])) {
-                connection.stop(args);
-            } else if (STATUS.equals(args[0])) {
-                connection.status(args);
-            } else {
-                System.out.printf("invalid command: %s\n", args[0]);
-            }
-            connection.close();
+            return;
         }
+
+        GrpcClient connection = new GrpcClient("sslcert/client.crt", "sslcert/client.pem", "sslcert/ca.crt");
+        try {
+            connection.init();
+        } catch (SSLException e1) {
+            logger.info("Invalid SSL context");
+            return;
+        }
+
+        if (START.equals(args[0])) {
+            connection.start(args);
+        } else if (STOP.equals(args[0])) {
+            connection.stop(args);
+        } else if (STATUS.equals(args[0])) {
+            connection.status(args);
+        } else {
+            System.out.printf("invalid command: %s\n", args[0]);
+        }
+        connection.close();
     }
 }

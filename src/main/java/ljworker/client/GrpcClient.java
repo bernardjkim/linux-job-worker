@@ -1,66 +1,57 @@
 package ljworker.client;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 import javax.net.ssl.SSLException;
 import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NegotiationType;
 import io.grpc.netty.NettyChannelBuilder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import ljworker.HealthCheckRequest;
+import ljworker.HealthCheckResponse;
+import ljworker.LinuxJobServiceGrpc;
+import java.util.logging.Level;
 
 /**
  * gRPC client interface. This client interface allows a user to send
  * start/stop/status requests to a connected LinuxJobWorker.
  */
-class GrpcClient {
-    // TODO: if service is open to public might consider using a trusted CA.
-    // for now we are just using self signed certificates.
-    private static File keyCertChainFile = new File("sslcert/client.crt");
-    private static File keyFile = new File("sslcert/client.pem");
-    private static File trustCertCollectionFile = new File("sslcert/ca.crt");
+public class GrpcClient {
+    private static final Logger logger = Logger.getLogger(GrpcClient.class.getName());
+    private static final String HOST = "localhost";
+    private static final int PORT = 8443;
+
+    private final String certChainFilePath;
+    private final String privateKeyFilePath;
+    private final String trustCertCollectionFilePath;
 
     private ManagedChannel channel;
-    private String host;
-    private int port;
+    private LinuxJobServiceGrpc.LinuxJobServiceBlockingStub blockingStub;
 
-    public GrpcClient(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public GrpcClient(String certChainFilePath, String privateKeyFilePath, String trustCertCollectionFilePath) {
+        this.certChainFilePath = certChainFilePath;
+        this.privateKeyFilePath = privateKeyFilePath;
+        this.trustCertCollectionFilePath = trustCertCollectionFilePath;
     }
 
     /** Initialize gRPC connection. */
     public void init() throws SSLException {
-
-        // Initialize the SSL context to use for encryption
-        // REF: https://github.com/grpc/grpc-java/tree/master/examples/example-tls
-        SslContextBuilder builder = GrpcSslContexts.forClient();
-        builder.trustManager(trustCertCollectionFile);
-        builder.keyManager(keyCertChainFile, keyFile);
-        SslContext sslContext = builder.build();
-
         // Initialize connection to ther server
-        this.channel = NettyChannelBuilder.forAddress(host, port)
+        this.channel = NettyChannelBuilder.forAddress(HOST, PORT)
                 .negotiationType(NegotiationType.TLS)
-                .sslContext(sslContext)
+                .sslContext(getSslContext())
                 .build();
+        blockingStub = LinuxJobServiceGrpc.newBlockingStub(channel);
     }
 
     /** Once the channel is closed new incoming RPCs will be cancelled. */
-    public void close() {
-        channel.shutdown();
-    }
-
-    /**
-     * Send authenticate request with provided username & password.
-     * 
-     * @param username Client username
-     * @param password Client password
-     * @return An access token to authorize LinuxJobWorker RPCs.
-     */
-    public String authenticate(String username, String password) {
-        // TODO: send authenticate rpc. return JWT token
-        return "token";
+    public void close() throws InterruptedException {
+        channel.shutdown()
+                .awaitTermination(5, TimeUnit.SECONDS);
     }
 
     /**
@@ -90,4 +81,36 @@ class GrpcClient {
         // TODO: status RPC
     }
 
+    /** Check if server available. Mainly just for testing purposes. */
+    public HealthCheckResponse healthCheck() {
+        HealthCheckRequest request = HealthCheckRequest.newBuilder()
+                .build();
+        HealthCheckResponse response;
+        try {
+            response = blockingStub.healthCheck(request);
+            return response;
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
+                    .getCode());
+            return null;
+        }
+    }
+
+    /**
+     * Initialize the SSL context to use for encryption.
+     * REF:https://github.com/grpc/grpc-java/tree/master/examples/example-tls
+     * 
+     * @return SSL context.
+     * @throws SSLException
+     */
+    private SslContext getSslContext() throws SSLException {
+        File keyCertChainFile = new File(certChainFilePath);
+        File keyFile = new File(privateKeyFilePath);
+        File trustCertCollectionFile = new File(trustCertCollectionFilePath);
+
+        SslContextBuilder builder = GrpcSslContexts.forClient();
+        builder.trustManager(trustCertCollectionFile);
+        builder.keyManager(keyCertChainFile, keyFile);
+        return builder.build();
+    }
 }
