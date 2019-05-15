@@ -29,6 +29,7 @@ message HealthCheckResponse {
 
 service LinuxJobService {
     rpc start(StartRequest) returns (StartResponse);
+    rpc startStream(StartRequest) returns (stream StartResponse);
     rpc stop(StopRequest) returns (StopResponse);
     rpc status(StatusRequest) returns (StatusResponse);
     rpc healthCheck(HealthCheckRequest) returns (HealthCheckResponse);
