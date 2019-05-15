@@ -1,45 +1,36 @@
 package ljworker.client;
 
+import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLException;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.NettyChannelBuilder;
+
 
 /**
  * gRPC client interface. This client interface allows a user to send
  * start/stop/status requests to a connected LinuxJobWorker.
  */
-class GrpcClient {
-    private ManagedChannel channel;
-    private String host;
-    private int port;
+public class GrpcClient {
+    private static final String HOST = "localhost";
+    private static final int PORT = 8443;
 
-    public GrpcClient(String host, int port) {
-        this.host = host;
-        this.port = port;
-    }
+    private ManagedChannel channel;
+
+    public GrpcClient() {}
 
     /** Initialize gRPC connection. */
     public void init() {
-        this.channel = NettyChannelBuilder.forAddress(host, port)
+        // Initialize connection to ther server
+        this.channel = NettyChannelBuilder.forAddress(HOST, PORT)
                 // TODO: setup TLS/SSL encryption. RPCs sent as plain text for now.
                 .usePlaintext()
                 .build();
     }
 
     /** Once the channel is closed new incoming RPCs will be cancelled. */
-    public void close() {
-        channel.shutdown();
-    }
-
-    /**
-     * Send authenticate request with provided username & password.
-     * 
-     * @param username Client username
-     * @param password Client password
-     * @return An access token to authorize LinuxJobWorker RPCs.
-     */
-    public String authenticate(String username, String password) {
-        // TODO: send authenticate rpc. return JWT token
-        return "token";
+    public void close() throws InterruptedException {
+        channel.shutdown()
+                .awaitTermination(5, TimeUnit.SECONDS);
     }
 
     /**
@@ -68,5 +59,4 @@ class GrpcClient {
     public void status(String[] args) {
         // TODO: status RPC
     }
-
 }

@@ -18,7 +18,6 @@ public class GrpcServer {
         Server server = NettyServerBuilder.forAddress(new InetSocketAddress(HOST, PORT))
                 // Add service handlers
                 .addService(new LinuxJobServiceImpl())
-                .addService(new AuthenticationServiceImpl())
                 .build();
 
         System.out.println("Starting server...");
