@@ -1,6 +1,7 @@
 package ljworker.server;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Server {
@@ -13,7 +14,7 @@ public class Server {
             server.start();
             server.blockUntilShutdown();
         } catch (IOException e) {
-            logger.info("Unable to bind server. Port is already in use?");
+            logger.log(Level.WARNING, "Unable to bind server. Port is already in use?");
         }
     }
 }

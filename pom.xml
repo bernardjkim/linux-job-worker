@@ -69,7 +69,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>ljworker.client.App</mainClass>
+                            <mainClass>ljworker.client.Client</mainClass>
                         </configuration>
                     </execution>
                     <execution>
@@ -78,7 +78,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>ljworker.server.GrpcServer</mainClass>
+                            <mainClass>ljworker.server.Server</mainClass>
                         </configuration>
                     </execution>
                 </executions>

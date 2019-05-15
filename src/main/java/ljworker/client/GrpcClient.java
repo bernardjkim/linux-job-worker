@@ -16,6 +16,7 @@ import ljworker.HealthCheckResponse;
 import ljworker.LinuxJobServiceGrpc;
 import java.util.logging.Level;
 
+
 /**
  * gRPC client interface. This client interface allows a user to send
  * start/stop/status requests to a connected LinuxJobWorker.

@@ -12,9 +12,7 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
 
-/**
- * gRPC server listening for client RPCs.
- */
+/** gRPC server listening for client RPCs. */
 public class GrpcServer {
     private static final Logger logger = Logger.getLogger(GrpcServer.class.getName());
     private static final String HOST = "localhost";
