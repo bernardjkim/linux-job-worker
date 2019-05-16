@@ -66,8 +66,7 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
                 } else {
                     List<String> list = logs.getList();
                     String output = list.get((int) index);
-                    StartResponse response = builder.setOutput("TEST")
-                            .setOutput(output)
+                    StartResponse response = builder.setOutput(output)
                             .build();
                     responseObserver.onNext(response);
                 }
