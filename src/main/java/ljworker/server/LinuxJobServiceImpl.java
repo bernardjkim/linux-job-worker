@@ -4,6 +4,7 @@ import java.util.Observer;
 import java.util.Observable;
 import java.util.List;
 import com.google.protobuf.ProtocolStringList;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import ljworker.LinuxJobServiceGrpc.LinuxJobServiceImplBase;
 import ljworker.util.ObservableList;
@@ -45,7 +46,6 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
         Job job = new Job(args.toArray(new String[0]));
         jobManager.startJob(job);
 
-
         // build response
         StartResponse.Builder builder = StartResponse.newBuilder();
 
@@ -59,16 +59,21 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
                     return;
                 }
 
-                // index of -1 indicates that the job has completed
-                if ((int) index == -1) {
-                    responseObserver.onCompleted();
-                    logs.deleteObserver(this);
-                } else {
-                    List<String> list = logs.getList();
-                    String output = list.get((int) index);
-                    StartResponse response = builder.setOutput(output)
-                            .build();
-                    responseObserver.onNext(response);
+                try {
+                    // index of -1 indicates that the job has completed
+                    if ((int) index == -1) {
+                        logs.deleteObserver(this);
+                        responseObserver.onCompleted();
+                    } else {
+                        List<String> list = logs.getList();
+                        String output = list.get((int) index);
+                        StartResponse response = builder.setOutput(output)
+                                .build();
+                        responseObserver.onNext(response);
+                    }
+                } catch (StatusRuntimeException e) {
+                    // if client closes channel, stop the job
+                    job.stop();
                 }
             }
         });

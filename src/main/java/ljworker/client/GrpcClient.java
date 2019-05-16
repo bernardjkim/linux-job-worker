@@ -34,12 +34,24 @@ public class GrpcClient {
                 .usePlaintext()
                 .build();
         blockingStub = LinuxJobServiceGrpc.newBlockingStub(channel);
+        Runtime.getRuntime()
+                // registered shutdown hook will be run when the JVM begins shutdown
+                .addShutdownHook(new Thread() {
+                    @Override
+                    public void run() {
+                        // Use stderr here since the logger may have been reset by its JVM shutdown
+                        // hook.
+                        System.err.println("*** shutting down gRPC client since JVM is shutting down");
+                        GrpcClient.this.close();
+                        System.err.println("*** client shut down");
+                    }
+                });
     }
 
     /** Once the channel is closed new incoming RPCs will be cancelled. */
-    public void close() throws InterruptedException {
-        channel.shutdown()
-                .awaitTermination(5, TimeUnit.SECONDS);
+    public void close() {
+        channel.shutdown();
+
     }
 
     /**
@@ -85,6 +97,7 @@ public class GrpcClient {
         Iterator<StartResponse> response;
         try {
             response = blockingStub.startStream(request);
+
             while (response.hasNext()) {
                 System.out.println(response.next()
                         .getOutput());

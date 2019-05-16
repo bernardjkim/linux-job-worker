@@ -65,14 +65,16 @@ public class Job implements Runnable {
             int exitVal = proc.waitFor();
             status = COMPLETED;
             logs.add("ExitValue: " + exitVal);
-            logs.end();
         } catch (IOException e) {
+            logs.add("[ERROR]\tIOException");
+            logs.add("ExitValue: " + 1);
             status = FAILED;
         } catch (InterruptedException e) {
             Thread.currentThread()
                     .interrupt();
             status = INTERRUPTED;
         } finally {
+            logs.end();
             running.set(false);
         }
     }
