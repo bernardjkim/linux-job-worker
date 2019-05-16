@@ -35,8 +35,10 @@ public class Job implements Runnable {
     // the start() method is called on the thread.
     public void run() {
         try {
-            Runtime rt = Runtime.getRuntime();
-            Process proc = rt.exec(args);
+            // creating the process
+            ProcessBuilder pb = new ProcessBuilder(args);
+            Process proc = pb.start();
+
 
             // set status to RUNNING
             running.set(true);
