@@ -3,6 +3,7 @@ package ljworker.client;
 public class Client {
     // Command string constants
     private static final String START = "start";
+    private static final String STREAM = "stream";
     private static final String STOP = "stop";
     private static final String STATUS = "status";
 
@@ -10,6 +11,7 @@ public class Client {
     public static void printUsage() {
         System.out.println("Usage:");
         System.out.printf("\t%s\t<linux cmd>\n", START);
+        System.out.printf("\t%s\t<linux cmd>\n", STREAM);
         System.out.printf("\t%s\t<process id>\n", STOP);
         System.out.printf("\t%s\t<process id>\n", STATUS);
     }
@@ -24,6 +26,8 @@ public class Client {
         connection.init();
         if (START.equals(args[0])) {
             connection.start(args);
+        } else if (STREAM.equals(args[0])) {
+            connection.stream(args);
         } else if (STOP.equals(args[0])) {
             connection.stop(args);
         } else if (STATUS.equals(args[0])) {

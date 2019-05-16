@@ -1,8 +1,12 @@
 package ljworker.server;
 
+import java.util.Observer;
+import java.util.Observable;
+import java.util.List;
 import com.google.protobuf.ProtocolStringList;
 import io.grpc.stub.StreamObserver;
 import ljworker.LinuxJobServiceGrpc.LinuxJobServiceImplBase;
+import ljworker.util.ObservableList;
 import ljworker.StartRequest;
 import ljworker.StartResponse;
 import ljworker.StatusRequest;
@@ -36,7 +40,39 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
 
     @Override
     public void startStream(StartRequest req, StreamObserver<StartResponse> responseObserver) {
-        // TODO: handle start stream RPC
+        // create new job with the provided args and enqueue the job
+        ProtocolStringList args = req.getArgsList();
+        Job job = new Job(args.toArray(new String[0]));
+        jobManager.startJob(job);
+
+
+        // build response
+        StartResponse.Builder builder = StartResponse.newBuilder();
+
+        // Add observer to the jobs logs. When a new entry is added to the logs
+        // stream the response to the client.
+        ObservableList logs = job.getLogs();
+        logs.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object index) {
+                if (o != logs) {
+                    return;
+                }
+
+                // index of -1 indicates that the job has completed
+                if ((int) index == -1) {
+                    responseObserver.onCompleted();
+                    logs.deleteObserver(this);
+                } else {
+                    List<String> list = logs.getList();
+                    String output = list.get((int) index);
+                    StartResponse response = builder.setOutput("TEST")
+                            .setOutput(output)
+                            .build();
+                    responseObserver.onNext(response);
+                }
+            }
+        });
     }
 
     @Override

@@ -2,8 +2,9 @@ package ljworker.worker;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import ljworker.util.ObservableList;
+import ljworker.util.StreamGobbler;
 
 /**
  * A job is an instance of a linux job. It contains the command, status, and
@@ -23,16 +24,18 @@ public class Job implements Runnable {
 
     private String[] args;
     private String status;
-    private List<String> logs;
+    private ObservableList logs;
 
     public Job(String[] args) {
         this.args = args;
         this.status = QUEUED;
-        this.logs = new ArrayList<>();
+        // this.logs = new ArrayList<>();
+        this.logs = new ObservableList(new ArrayList<>());
     }
 
     // Runnable interface requires run method. This method will be called when
     // the start() method is called on the thread.
+    @Override
     public void run() {
         try {
             // creating the process
@@ -54,17 +57,23 @@ public class Job implements Runnable {
             errorGobbler.start();
             outputGobbler.start();
 
+            // wait for stream gobblers to complete
+            errorGobbler.join();
+            outputGobbler.join();
+
             // wait for process to complete and set status to COMPLETED
             int exitVal = proc.waitFor();
-            running.set(false);
             status = COMPLETED;
             logs.add("ExitValue: " + exitVal);
+            logs.end();
         } catch (IOException e) {
             status = FAILED;
         } catch (InterruptedException e) {
             Thread.currentThread()
                     .interrupt();
             status = INTERRUPTED;
+        } finally {
+            running.set(false);
         }
     }
 
@@ -76,7 +85,7 @@ public class Job implements Runnable {
         return this.status;
     }
 
-    public List<String> getLogs() {
+    public ObservableList getLogs() {
         return this.logs;
     }
 

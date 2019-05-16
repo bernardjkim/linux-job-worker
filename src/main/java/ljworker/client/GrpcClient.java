@@ -1,5 +1,6 @@
 package ljworker.client;
 
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,6 +60,35 @@ public class GrpcClient {
         // send request
         try {
             blockingStub.start(request);
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
+                    .getCode());
+        }
+    }
+
+    /**
+     * Send start request with provided args. Stream output of process.
+     * 
+     * @param args Start RPC arguments
+     */
+    public void stream(String[] args) {
+        // create new Start Request
+        StartRequest.Builder builder = StartRequest.newBuilder();
+
+        // start at index 1 to ignore 'start' token
+        for (int index = 1; index < args.length; index++) {
+            builder.addArgs(args[index]);
+        }
+        StartRequest request = builder.build();
+
+        // send request
+        Iterator<StartResponse> response;
+        try {
+            response = blockingStub.startStream(request);
+            while (response.hasNext()) {
+                System.out.println(response.next()
+                        .getOutput());
+            }
         } catch (StatusRuntimeException e) {
             logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
                     .getCode());
