@@ -1,5 +1,7 @@
 package ljworker.worker;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * A job is an instance of a linux job. It contains the command, status, and
  * logs of the job.
@@ -10,6 +12,10 @@ public class Job implements Runnable {
     static final String RUNNING = "RUNNING";
     static final String COMPLETED = "COMPLETED";
     static final String FAILED = "FAILED";
+
+    // indicates thread status
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    private Thread worker;
 
     private String command;
     private String status;
@@ -44,7 +50,8 @@ public class Job implements Runnable {
     }
 
     public void stop() {
-        // TODO: handle stop
+        running.set(false);
+        worker.interrupt();
     }
 
 }

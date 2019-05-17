@@ -9,9 +9,11 @@ message StartResponse {
 }
 
 message StopRequest {
+    int32 id = 1;
 }
 
 message StopResponse {
+    bool success = 1;
 }
 
 message StatusRequest {

@@ -1,8 +1,13 @@
 package ljworker.client;
 
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
 import io.grpc.netty.NettyChannelBuilder;
+import ljworker.LinuxJobServiceGrpc;
+import ljworker.StopRequest;
 
 
 /**
@@ -10,10 +15,12 @@ import io.grpc.netty.NettyChannelBuilder;
  * start/stop/status requests to a connected LinuxJobWorker.
  */
 public class GrpcClient {
+    private static final Logger logger = Logger.getLogger(GrpcClient.class.getName());
     private static final String HOST = "localhost";
     private static final int PORT = 8443;
 
     private ManagedChannel channel;
+    private LinuxJobServiceGrpc.LinuxJobServiceBlockingStub blockingStub;
 
     public GrpcClient() {}
 
@@ -24,6 +31,7 @@ public class GrpcClient {
                 // TODO: setup TLS/SSL encryption. RPCs sent as plain text for now.
                 .usePlaintext()
                 .build();
+        blockingStub = LinuxJobServiceGrpc.newBlockingStub(channel);
     }
 
     /** Once the channel is closed new incoming RPCs will be cancelled. */
@@ -47,7 +55,18 @@ public class GrpcClient {
      * @param args Stop RPC arguments
      */
     public void stop(String[] args) {
-        // TODO: stop RPC
+        // create new Stop Request
+        StopRequest.Builder builder = StopRequest.newBuilder();
+        builder.setId(Integer.parseInt(args[1]));
+        StopRequest request = builder.build();
+
+        // send request
+        try {
+            blockingStub.stop(request);
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
+                    .getCode());
+        }
     }
 
     /**

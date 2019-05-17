@@ -8,6 +8,7 @@ import ljworker.StatusRequest;
 import ljworker.StatusResponse;
 import ljworker.StopRequest;
 import ljworker.StopResponse;
+import ljworker.worker.Job;
 import ljworker.worker.JobManager;
 
 /** LinuxJobService handles LinuxJobWorker RPCs. */
@@ -30,7 +31,22 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
 
     @Override
     public void stop(StopRequest req, StreamObserver<StopResponse> responseObserver) {
-        // TODO: handle stop RPC
+        // build response
+        StopResponse.Builder builder = StopResponse.newBuilder();
+
+        // stop job with the matching id
+        int id = req.getId();
+        Job job = jobManager.getJob(id);
+        if (job != null) {
+            job.stop();
+            builder.setSuccess(true);
+        } else {
+            builder.setSuccess(false);
+        }
+
+        StopResponse response = builder.build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
     @Override
