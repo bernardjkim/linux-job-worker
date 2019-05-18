@@ -9,7 +9,7 @@ public class Server {
 
     public static void main(String[] args) throws InterruptedException {
 
-        GrpcServer server = new GrpcServer();
+        GrpcServer server = new GrpcServer("sslcert/server.crt", "sslcert/server.pem", "sslcert/ca.crt");
         try {
             server.start();
             server.blockUntilShutdown();

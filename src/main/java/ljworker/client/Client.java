@@ -1,6 +1,10 @@
 package ljworker.client;
 
+import java.util.logging.Logger;
+import javax.net.ssl.SSLException;
+
 public class Client {
+    private static final Logger logger = Logger.getLogger(Client.class.getName());
     // Command string constants
     private static final String START = "start";
     private static final String STOP = "stop";
@@ -20,8 +24,13 @@ public class Client {
             return;
         }
 
-        GrpcClient connection = new GrpcClient();
-        connection.init();
+        GrpcClient connection = new GrpcClient("sslcert/client.crt", "sslcert/client.pem", "sslcert/ca.crt");
+        try {
+            connection.init();
+        } catch (SSLException e) {
+            logger.info("Invalid SSL context");
+            return;
+        }
         if (START.equals(args[0])) {
             connection.start(args);
         } else if (STOP.equals(args[0])) {
