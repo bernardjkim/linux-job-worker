@@ -29,9 +29,11 @@ public class JobManager {
         return jobs.get(id);
     }
 
-    public int startJob(Job job) {
-        // TODO: handle start job
-        return -1;
+    public void startJob(Job job) {
+        // TODO: queue jobs to maintain max # of threads
+        int id = nextProcId.incrementAndGet();
+        jobs.put(id, job);
+        job.start();
     }
 
     public void stopJob(int id) {
