@@ -49,9 +49,12 @@ public class GrpcClient {
                 .negotiationType(NegotiationType.TLS)
                 .sslContext(getSslContext()) // SSL context for encryption
                 .build();
+
+        // Initialize blocking stub
         blockingStub = LinuxJobServiceGrpc.newBlockingStub(channel);
+
+        // registered shutdown hook will be run when the JVM begins shutdown
         Runtime.getRuntime()
-                // registered shutdown hook will be run when the JVM begins shutdown
                 .addShutdownHook(new Thread() {
                     @Override
                     public void run() {
