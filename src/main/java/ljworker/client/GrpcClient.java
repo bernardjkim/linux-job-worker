@@ -46,13 +46,34 @@ public class GrpcClient {
                 .negotiationType(NegotiationType.TLS)
                 .sslContext(getSslContext()) // SSL context for encryption
                 .build();
+
+        // Initialize blocking stub
         blockingStub = LinuxJobServiceGrpc.newBlockingStub(channel);
+
+        // registered shutdown hook will be run when the JVM begins shutdown
+        Runtime.getRuntime()
+                .addShutdownHook(new Thread() {
+                    @Override
+                    public void run() {
+                        // Use stderr here since the logger may have been reset by its JVM shutdown
+                        // hook.
+                        System.err.println("*** shutting down gRPC client since JVM is shutting down");
+                        GrpcClient.this.close();
+                        System.err.println("*** client shut down");
+                    }
+                });
     }
 
     /** Once the channel is closed new incoming RPCs will be cancelled. */
-    public void close() throws InterruptedException {
-        channel.shutdown()
-                .awaitTermination(5, TimeUnit.SECONDS);
+    public void close() {
+        try {
+            // NOTE: need to await termination o.w. might not properly close channel
+            channel.shutdown()
+                    .awaitTermination(1, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     /**
