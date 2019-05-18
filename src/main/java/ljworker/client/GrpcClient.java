@@ -24,8 +24,6 @@ public class GrpcClient {
     private ManagedChannel channel;
     private LinuxJobServiceGrpc.LinuxJobServiceBlockingStub blockingStub;
 
-    public GrpcClient() {}
-
     /** Initialize gRPC connection. */
     public void init() {
         // Initialize connection to ther server
@@ -50,8 +48,14 @@ public class GrpcClient {
 
     /** Once the channel is closed new incoming RPCs will be cancelled. */
     public void close() {
-        channel.shutdown();
-
+        try {
+            // NOTE: need to await termination o.w. might not properly close channel
+            channel.shutdown()
+                    .awaitTermination(1, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     /**

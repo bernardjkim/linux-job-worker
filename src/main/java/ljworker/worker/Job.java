@@ -2,7 +2,6 @@ package ljworker.worker;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 import ljworker.util.ObservableList;
 import ljworker.util.StreamGobbler;
 
@@ -18,8 +17,6 @@ public class Job implements Runnable {
     static final String FAILED = "FAILED";
     static final String INTERRUPTED = "INTERRUPTED";
 
-    // indicates thread status
-    private final AtomicBoolean running = new AtomicBoolean(false);
     private Thread worker;
 
     private String[] args;
@@ -29,7 +26,6 @@ public class Job implements Runnable {
     public Job(String[] args) {
         this.args = args;
         this.status = QUEUED;
-        // this.logs = new ArrayList<>();
         this.logs = new ObservableList(new ArrayList<>());
     }
 
@@ -37,21 +33,22 @@ public class Job implements Runnable {
     // the start() method is called on the thread.
     @Override
     public void run() {
+        // create the process
+        ProcessBuilder pb = new ProcessBuilder(args);
+        Process proc = null;
+        StreamGobbler errorGobbler = null;
+        StreamGobbler outputGobbler = null;
         try {
-            // creating the process
-            ProcessBuilder pb = new ProcessBuilder(args);
-            Process proc = pb.start();
-
+            proc = pb.start();
 
             // set status to RUNNING
-            running.set(true);
             status = RUNNING;
 
             // any error message?
-            StreamGobbler errorGobbler = new StreamGobbler(proc.getErrorStream(), "ERROR", logs);
+            errorGobbler = new StreamGobbler(proc.getErrorStream(), "ERROR", logs);
 
             // any output?
-            StreamGobbler outputGobbler = new StreamGobbler(proc.getInputStream(), "OUTPUT", logs);
+            outputGobbler = new StreamGobbler(proc.getInputStream(), "OUTPUT", logs);
 
             // start reading output and error
             errorGobbler.start();
@@ -67,15 +64,17 @@ public class Job implements Runnable {
             logs.add("ExitValue: " + exitVal);
         } catch (IOException e) {
             logs.add("[ERROR]\tIOException");
-            logs.add("ExitValue: " + 1);
             status = FAILED;
         } catch (InterruptedException e) {
-            Thread.currentThread()
-                    .interrupt();
+            // stop the running process
+            if (null != proc) {
+                proc.destroy();
+            }
+
+            logs.add("[INFO]\tInterrupt");
             status = INTERRUPTED;
         } finally {
-            logs.end();
-            running.set(false);
+            logs.close();
         }
     }
 
@@ -96,8 +95,11 @@ public class Job implements Runnable {
         worker.start();
     }
 
+    /**
+     * Stop the current job. Calling stop on a job that is not running will have no
+     * effect.
+     */
     public void stop() {
-        running.set(false);
         worker.interrupt();
     }
 }

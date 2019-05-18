@@ -15,8 +15,6 @@ public class GrpcServer {
 
     private Server server;
 
-    public GrpcServer() {}
-
     /**
      * Initialize & start gRPC server
      * 
