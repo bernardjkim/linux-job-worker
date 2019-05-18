@@ -26,13 +26,17 @@ public class ObservableList extends Observable {
         return list;
     }
 
+    public boolean isClosed() {
+        return closed;
+    }
+
     /**
      * Checks to see if the list is still recieving new logs.
      * 
      * @return True if still recieving new logs, false otherwise.
      */
     public boolean hasNext() {
-        return !closed;
+        return index < list.size();
     }
 
     /**
@@ -40,7 +44,7 @@ public class ObservableList extends Observable {
      * 
      * @return The next log value.
      */
-    public String getNext() {
+    public String next() {
         return list.get(index++);
     }
 
@@ -61,6 +65,7 @@ public class ObservableList extends Observable {
      * that the list is done reading output/errors.
      */
     public void close() {
+        closed = true;
         setChanged();
         notifyObservers();
     }

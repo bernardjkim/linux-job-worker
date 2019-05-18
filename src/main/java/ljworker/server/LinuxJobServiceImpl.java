@@ -53,17 +53,24 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
         // stream the output to the client.
         ObservableList logs = job.getLogs();
         logs.addObserver(new Observer() {
+
             @Override
             public void update(Observable o, Object args) {
-                if (logs.hasNext()) {
-                    String output = logs.getNext();
-                    StartResponse response = builder.setOutput(output)
-                            .build();
-                    try {
-                        responseObserver.onNext(response);
-                    } catch (StatusRuntimeException e) {
-                        // if RPC is cancelled, stop streaming logs
-                        logs.deleteObserver(this);
+                // check if log is still receiving new output
+                if (!logs.isClosed()) {
+
+                    // stream all available output
+                    while (logs.hasNext()) {
+                        String output = logs.next();
+                        StartResponse response = builder.setOutput(output)
+                                .build();
+
+                        try {
+                            responseObserver.onNext(response);
+                        } catch (StatusRuntimeException e) {
+                            // if RPC is cancelled, stop streaming logs
+                            logs.deleteObserver(this);
+                        }
                     }
                 } else {
                     // remove observer if logs has no more output, this should
