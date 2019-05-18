@@ -7,6 +7,8 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import ljworker.LinuxJobServiceGrpc.LinuxJobServiceImplBase;
 import ljworker.util.ObservableList;
+import ljworker.HealthCheckRequest;
+import ljworker.HealthCheckResponse;
 import ljworker.StartRequest;
 import ljworker.StartResponse;
 import ljworker.StatusRequest;
@@ -82,5 +84,14 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
     @Override
     public void status(StatusRequest req, StreamObserver<StatusResponse> responseObserver) {
         // TODO: handle status RPC
+    }
+
+    @Override
+    public void healthCheck(HealthCheckRequest req, StreamObserver<HealthCheckResponse> responseObserver) {
+        HealthCheckResponse response = HealthCheckResponse.newBuilder()
+                .setStatus("OK")
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 }
