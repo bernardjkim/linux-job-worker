@@ -1,5 +1,8 @@
 package ljworker.worker;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A job is an instance of a linux job. It contains the command, status, and
  * logs of the job.
@@ -11,14 +14,14 @@ public class Job implements Runnable {
     static final String COMPLETED = "COMPLETED";
     static final String FAILED = "FAILED";
 
-    private String command;
+    private String[] args;
     private String status;
-    private String logs;
+    private List<String> logs;
 
-    public Job(String command) {
-        this.command = command;
+    public Job(String[] args) {
+        this.args = args;
         this.status = QUEUED;
-        this.logs = "";
+        this.logs = new ArrayList<>();
     }
 
     // Runnable interface requires run method. This method will be called when
@@ -27,15 +30,15 @@ public class Job implements Runnable {
         // TODO: handle run
     }
 
-    public String getCommand() {
-        return this.command;
+    public String[] getArgs() {
+        return this.args;
     }
 
     public String getStatus() {
         return this.status;
     }
 
-    public String getLogs() {
+    public List<String> getLogs() {
         return this.logs;
     }
 
