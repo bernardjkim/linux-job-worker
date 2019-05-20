@@ -125,8 +125,10 @@ public class GrpcClient {
             response = blockingStub.startStream(request);
 
             while (response.hasNext()) {
-                System.out.println(response.next()
-                        .getOutput());
+                for (String output : response.next()
+                        .getOutputList()) {
+                    System.out.println(output);
+                }
             }
         } catch (StatusRuntimeException e) {
             logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()

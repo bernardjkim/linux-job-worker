@@ -51,18 +51,21 @@ public class LinuxJobServiceTest {
         StartRequest request = builder.build();
 
         // write stream to output list
-        List<String> output = new ArrayList<>();
+        List<String> outputList = new ArrayList<>();
 
         // send request
         Iterator<StartResponse> response;
         response = blockingStub.startStream(request);
         while (response.hasNext()) {
-            output.add(response.next()
-                    .getOutput());
+
+            for (String output : response.next()
+                    .getOutputList()) {
+                outputList.add(output);
+            }
         }
 
-        String[] expected = new String[] {"[OUTPUT]\ttest", "ExitValue: 0"};
-        String[] actual = output.toArray(new String[0]);
+        String[] expected = new String[] {"[OUTPUT] test", "ExitValue: 0"};
+        String[] actual = outputList.toArray(new String[0]);
 
         assertEquals(expected.length, actual.length);
         for (int i = 0; i < expected.length; i++) {
