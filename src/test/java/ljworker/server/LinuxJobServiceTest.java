@@ -73,6 +73,13 @@ public class LinuxJobServiceTest {
         logger.info("Start RPC PASSED");
     }
 
+    /**
+     * Test status RPC.
+     * 
+     * Request 'stream echo test' then request the status of the job. Should get
+     * id=1, status="COMPLETE", args=["echo", "test"], logs=["[OUTPUT] test",
+     * "ExitValue: 0", "END OF LOGS"]
+     */
     @Test
     public void statusTest() {
         logger.info("Testing status RPC...");
