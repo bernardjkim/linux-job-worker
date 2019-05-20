@@ -51,11 +51,7 @@ public class LinuxJobServiceTest {
         builder.addArgs("echo")
                 .addArgs("test");
         StartRequest request = builder.build();
-
-
-        // send request
-        Iterator<StartResponse> response;
-        response = blockingStub.startStream(request);
+        Iterator<StartResponse> response = blockingStub.startStream(request);
 
         // write stream to output list
         List<String> outputList = new ArrayList<>();
@@ -86,7 +82,12 @@ public class LinuxJobServiceTest {
         startRequestBuilder.addArgs("echo")
                 .addArgs("test");
         StartRequest startRequest = startRequestBuilder.build();
-        blockingStub.start(startRequest);
+        Iterator<StartResponse> startResponse = blockingStub.startStream(startRequest);
+
+        // make sure job is complete before testing status
+        while (startResponse.hasNext()) {
+            startResponse.next();
+        }
 
         // send status request
         StatusRequest.Builder statusRequestBuilder = StatusRequest.newBuilder();

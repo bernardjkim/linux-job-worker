@@ -160,13 +160,12 @@ public class GrpcClient {
         // send request
         try {
             StatusResponse response = blockingStub.status(request);
-            System.out.println("ID: " + response.getId());
-            System.out.print("Args: [");
-            for (String arg : response.getArgsList()) {
-                System.out.print(arg + " ");
-            }
-            System.out.println("]");
-            System.out.println("Status: " + response.getStatus());
+            int id = response.getId();
+            String jobArgs = response.getArgsList()
+                    .toString();
+            String status = response.getStatus();
+            System.out.printf("%s\t%-50s%s\n", "id", "args", "status");
+            System.out.printf("%d\t%-50s%s\n", id, jobArgs, status);
             for (String output : response.getLogsList()) {
                 System.out.println(output);
             }
