@@ -22,6 +22,18 @@ message StatusRequest {
 message StatusResponse {
 }
 
+message ListRequest {
+}
+
+message ListResponse {
+    message JobData {
+        int32 id = 1;
+        string status = 2;
+        repeated string args = 3;
+    }
+    repeated JobData jobData = 1;
+}
+
 message HealthCheckRequest {
 }
 
@@ -34,6 +46,7 @@ service LinuxJobService {
     rpc startStream(StartRequest) returns (stream StartResponse);
     rpc stop(StopRequest) returns (StopResponse);
     rpc status(StatusRequest) returns (StatusResponse);
+    rpc list(ListRequest) returns (ListResponse);
     rpc healthCheck(HealthCheckRequest) returns (HealthCheckResponse);
 }
 
