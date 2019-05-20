@@ -7,7 +7,7 @@ message StartRequest {
 }
 
 message StartResponse {
-    string output = 1;
+    repeated string output = 1;
 }
 
 message StopRequest {

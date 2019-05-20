@@ -2,7 +2,7 @@ package ljworker.worker;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import ljworker.util.ObservableList;
+import java.util.List;
 import ljworker.util.StreamGobbler;
 
 /**
@@ -21,12 +21,16 @@ public class Job implements Runnable {
 
     private String[] args;
     private String status;
-    private ObservableList logs;
+
+    // TODO: Do we need to store the process output for a client to query at a
+    // later time? Or do we just need to worry about streaming the output while
+    // the process is running?
+    private List<String> logs;
 
     public Job(String[] args) {
         this.args = args;
         this.status = QUEUED;
-        this.logs = new ObservableList(new ArrayList<>());
+        this.logs = new ArrayList<>();
     }
 
     // Runnable interface requires run method. This method will be called when
@@ -44,10 +48,7 @@ public class Job implements Runnable {
             // set status to RUNNING
             status = RUNNING;
 
-            // any error message?
             errorGobbler = new StreamGobbler(proc.getErrorStream(), "ERROR", logs);
-
-            // any output?
             outputGobbler = new StreamGobbler(proc.getInputStream(), "OUTPUT", logs);
 
             // start reading output and error
@@ -73,8 +74,10 @@ public class Job implements Runnable {
 
             logs.add("[INFO]\tInterrupt");
             status = INTERRUPTED;
+            Thread.currentThread()
+                    .interrupt();
         } finally {
-            logs.close();
+            logs.add("END OF LOGS");
         }
     }
 
@@ -86,7 +89,7 @@ public class Job implements Runnable {
         return this.status;
     }
 
-    public ObservableList getLogs() {
+    public List<String> getLogs() {
         return this.logs;
     }
 
