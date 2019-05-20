@@ -114,10 +114,10 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
             for (String log : job.getLogs()) {
                 builder.addLogs(log);
             }
-            StatusResponse response = builder.build();
-            responseObserver.onNext(response);
         }
 
+        StatusResponse response = builder.build();
+        responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 
