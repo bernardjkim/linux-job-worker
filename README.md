@@ -67,3 +67,7 @@ java -jar target/client.jar [cmd]
 ## Built With
 
 - [gRPC-Java](https://github.com/grpc/grpc-java) - gRPC library for Java
+
+## Style Guide
+
+- https://google.github.io/styleguide/javaguide.html
