@@ -1,0 +1,37 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package ljworker;
+
+message StartRequest {
+}
+
+message StartResponse {
+}
+
+message StopRequest {
+}
+
+message StopResponse {
+}
+
+message StatusRequest {
+}
+
+message StatusResponse {
+}
+
+message HealthCheckRequest {
+}
+
+message HealthCheckResponse {
+    string status = 1;
+}
+
+service LinuxJobService {
+    rpc start(StartRequest) returns (StartResponse);
+    rpc startStream(StartRequest) returns (stream StartResponse);
+    rpc stop(StopRequest) returns (StopResponse);
+    rpc status(StatusRequest) returns (StatusResponse);
+    rpc healthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
