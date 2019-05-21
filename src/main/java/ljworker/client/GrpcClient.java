@@ -3,6 +3,7 @@ package ljworker.client;
 import java.io.File;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLException;
 import io.grpc.ManagedChannel;
@@ -19,7 +20,7 @@ import ljworker.StatusRequest;
 import ljworker.StatusResponse;
 import ljworker.StartRequest;
 import ljworker.StartResponse;
-import java.util.logging.Level;
+import ljworker.StopRequest;
 
 
 /**
@@ -143,7 +144,18 @@ public class GrpcClient {
      * @param args Stop RPC arguments
      */
     public void stop(String[] args) {
-        // TODO: stop RPC
+        // create new Stop Request
+        StopRequest.Builder builder = StopRequest.newBuilder();
+        builder.setId(Integer.parseInt(args[1]));
+        StopRequest request = builder.build();
+
+        // send request
+        try {
+            blockingStub.stop(request);
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
+                    .getCode());
+        }
     }
 
     /**
