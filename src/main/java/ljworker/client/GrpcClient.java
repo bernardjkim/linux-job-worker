@@ -3,6 +3,7 @@ package ljworker.client;
 import java.io.File;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLException;
 import io.grpc.ManagedChannel;
@@ -17,10 +18,12 @@ import ljworker.HealthCheckResponse;
 import ljworker.LinuxJobServiceGrpc;
 import ljworker.ListRequest;
 import ljworker.ListResponse;
+import ljworker.ListResponse.JobData;
 import ljworker.StartRequest;
 import ljworker.StartResponse;
-import ljworker.ListResponse.JobData;
-import java.util.logging.Level;
+import ljworker.StatusRequest;
+import ljworker.StatusResponse;
+import ljworker.StopRequest;
 
 
 /**
@@ -142,7 +145,18 @@ public class GrpcClient {
      * @param args Stop RPC arguments
      */
     public void stop(String[] args) {
-        // TODO: stop RPC
+        // create new Stop Request
+        StopRequest.Builder builder = StopRequest.newBuilder();
+        builder.setId(Integer.parseInt(args[1]));
+        StopRequest request = builder.build();
+
+        // send request
+        try {
+            blockingStub.stop(request);
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
+                    .getCode());
+        }
     }
 
     /**
@@ -151,7 +165,27 @@ public class GrpcClient {
      * @param args Status RPC arguments
      */
     public void status(String[] args) {
-        // TODO: status RPC
+        // create new Status Request
+        StatusRequest.Builder builder = StatusRequest.newBuilder();
+        builder.setId(Integer.parseInt(args[1]));
+        StatusRequest request = builder.build();
+
+        // send request
+        try {
+            StatusResponse response = blockingStub.status(request);
+            int id = response.getId();
+            String jobArgs = response.getArgsList()
+                    .toString();
+            String status = response.getStatus();
+            System.out.printf("%s\t%-50s%s\n", "id", "args", "status");
+            System.out.printf("%d\t%-50s%s\n", id, jobArgs, status);
+            for (String output : response.getLogsList()) {
+                System.out.println(output);
+            }
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
+                    .getCode());
+        }
     }
 
     /** Send list request */

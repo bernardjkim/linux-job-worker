@@ -11,15 +11,22 @@ message StartResponse {
 }
 
 message StopRequest {
+    int32 id = 1;
 }
 
 message StopResponse {
+    bool success = 1;
 }
 
 message StatusRequest {
+    int32 id = 1;
 }
 
 message StatusResponse {
+    int32 id = 1;
+    repeated string args = 2;
+    string status = 3;
+    repeated string logs = 4;
 }
 
 message ListRequest {
@@ -33,7 +40,6 @@ message ListResponse {
     }
     repeated JobData jobData = 1;
 }
-
 message HealthCheckRequest {
 }
 

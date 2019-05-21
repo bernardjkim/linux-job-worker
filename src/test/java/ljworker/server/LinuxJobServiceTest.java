@@ -1,6 +1,9 @@
 package ljworker.server;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +14,10 @@ import javax.net.ssl.SSLException;
 import ljworker.LinuxJobServiceGrpc;
 import ljworker.StartRequest;
 import ljworker.StartResponse;
+import ljworker.StatusRequest;
+import ljworker.StatusResponse;
+import ljworker.StopRequest;
+import ljworker.StopResponse;
 import ljworker.server.GrpcServer;
 import org.junit.After;
 import org.junit.Before;
@@ -49,24 +56,20 @@ public class LinuxJobServiceTest {
         builder.addArgs("echo")
                 .addArgs("test");
         StartRequest request = builder.build();
+        Iterator<StartResponse> response = blockingStub.startStream(request);
 
         // write stream to output list
         List<String> outputList = new ArrayList<>();
-
-        // send request
-        Iterator<StartResponse> response;
-        response = blockingStub.startStream(request);
         while (response.hasNext()) {
-
             for (String output : response.next()
                     .getOutputList()) {
                 outputList.add(output);
             }
         }
 
+        // validate correct output
         String[] expected = new String[] {"[OUTPUT] test", "ExitValue: 0"};
         String[] actual = outputList.toArray(new String[0]);
-
         assertEquals(expected.length, actual.length);
         for (int i = 0; i < expected.length; i++) {
             assertEquals(expected[i], actual[i]);
@@ -74,13 +77,110 @@ public class LinuxJobServiceTest {
         logger.info("Start RPC PASSED");
     }
 
+    /**
+     * Test stop RPC.
+     * 
+     * Request stop for a valid id should return a StopResponse with sucess=true
+     * Request stop for a invalid id should return a StopResonse with success=false
+     */
+
+    @Test
+    public void stopTest() {
+        logger.info("Testing stop RPC...");
+
+        // create new Start Request
+        StartRequest.Builder startBuilder = StartRequest.newBuilder();
+        startBuilder.addArgs("echo")
+                .addArgs("test");
+        StartRequest startRequest = startBuilder.build();
+        blockingStub.start(startRequest);
+
+
+        StopRequest.Builder stopBuilder = StopRequest.newBuilder();
+        StopRequest stopRequest;
+        StopResponse stopResponse;
+
+        // 'Stop 1' should return success=true
+        stopBuilder.setId(1);
+        stopRequest = stopBuilder.build();
+        stopResponse = blockingStub.stop(stopRequest);
+        boolean success1 = stopResponse.getSuccess();
+        assertTrue(success1);
+
+        // 'Stop 2' should return success=false
+        stopBuilder.setId(2);
+        stopRequest = stopBuilder.build();
+        stopResponse = blockingStub.stop(stopRequest);
+        boolean success2 = stopResponse.getSuccess();
+        assertFalse(success2);
+
+        logger.info("Stop RPC PASSED");
+    }
+
+    /**
+     * Test status RPC.
+     * 
+     * Request 'stream echo test' then request the status of the job. Should get
+     * id=1, status="COMPLETE", args=["echo", "test"], logs=["[OUTPUT] test",
+     * "ExitValue: 0", "END OF LOGS"]
+     */
+    @Test
+    public void statusTest() {
+        logger.info("Testing status RPC...");
+
+        // send start request
+        StartRequest.Builder startRequestBuilder = StartRequest.newBuilder();
+        startRequestBuilder.addArgs("echo")
+                .addArgs("test");
+        StartRequest startRequest = startRequestBuilder.build();
+        Iterator<StartResponse> startResponse = blockingStub.startStream(startRequest);
+
+        // make sure job is complete before testing status
+        while (startResponse.hasNext()) {
+            startResponse.next();
+        }
+
+        // send status request
+        StatusRequest.Builder statusRequestBuilder = StatusRequest.newBuilder();
+        statusRequestBuilder.setId(1);
+        StatusRequest statusRequest = statusRequestBuilder.build();
+        StatusResponse statusResponse = blockingStub.status(statusRequest);
+
+        // validate correct id
+        assertEquals(1, statusResponse.getId());
+
+        // validate correct status
+        assertEquals("COMPLETED", statusResponse.getStatus());
+
+        // validate correct args
+        String[] expectedArgs = new String[] {"echo", "test"};
+        String[] actualArgs = statusResponse.getArgsList()
+                .toArray(new String[0]);
+        assertEquals(expectedArgs.length, actualArgs.length);
+        for (int i = 0; i < expectedArgs.length; i++) {
+            assertEquals(expectedArgs[i], actualArgs[i]);
+        }
+
+        // validate correct logs
+        String[] expectedLogs = new String[] {"[OUTPUT] test", "ExitValue: 0", "END OF LOGS"};
+        String[] actualLogs = statusResponse.getLogsList()
+                .toArray(new String[0]);
+        assertEquals(expectedLogs.length, actualLogs.length);
+        for (int i = 0; i < expectedLogs.length; i++) {
+            assertEquals(expectedLogs[i], actualLogs[i]);
+        }
+
+        logger.info("Status RPC PASSED");
+    }
+
+
+
     /** Initialize server and open channel. */
     @Before
     public void beforeEachTest() throws InstantiationException, IllegalAccessException, IOException {
         server = new GrpcServer("sslcert/server.crt", "sslcert/server.pem", "sslcert/ca.crt");
         server.start();
         channel = NettyChannelBuilder.forAddress(HOST, PORT)
-                // .usePlaintext()
                 .negotiationType(NegotiationType.TLS)
                 .sslContext(getSslContext("sslcert/client.crt", "sslcert/client.pem", "sslcert/ca.crt"))
                 .build();
