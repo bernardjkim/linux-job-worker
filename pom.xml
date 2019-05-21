@@ -80,7 +80,6 @@
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                     </execution>
-
                     <execution>
                         <id>server</id>
                         <phase>package</phase>
@@ -100,7 +99,6 @@
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                     </execution>
-
                 </executions>
             </plugin>
             <plugin>
