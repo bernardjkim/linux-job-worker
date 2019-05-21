@@ -1,14 +1,12 @@
 # linux-job-worker
 
-This project consists of a Linux job worker and a client interface. The worker provides an RPC API to start, stop, and query the status of a job. Additionally, the server will provide a method of authentication/authorization. The client interface will provide commands to start, stop and query a job.
+This project consists of a Linux job worker and a client interface. The worker provides an RPC API to start, stop, and query the status of a job.
 
 ## Design Doc
 
 - [Google Docs](https://docs.google.com/document/d/1-QvIUmbmiVxjSXkEQQJDLnIlh8yJWYTRquue8eT_Cck/edit?usp=sharing)
 
 ## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
 
@@ -19,21 +17,11 @@ To build and run the application you need:
 
 ### Installing
 
-Clone Repo
+Clone repo & build project
 
 ```
 git clone https://github.com/bernardjkim/linux-job-worker.git
-```
-
-cd to directory
-
-```
 cd linux-job-worker
-```
-
-build project
-
-```
 mvn package
 ```
 
@@ -53,9 +41,28 @@ java -jar target/server.jar
 
 Run Client
 
+cmds include:
+
+- **start [linux cmd]** - start new job
+- **stream [linux cmd]** - start new job and stream output
+- **stop [job id]** - stop job with matching id
+- **status [job id]** - output status/log for job with matching id
+- **list** - list all jobs
+
 ```
-java -jar target/client.jar [args...]
+java -jar target/client.jar [cmd]
 ```
+
+## Demo
+
+![Demo](demo.gif?raw=true "Title")
+
+## Limitations
+
+- Unable to stream output of RPC with a large amount of output. Attempting to
+  stream the output of **start yes** will result in a failed RPC with a status
+  code of **RESOURCE_EXHAUSTED**. A possible solution might be to split the
+  message into chunks with a max chunk size.
 
 ## Built With
 
