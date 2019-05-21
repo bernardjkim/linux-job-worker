@@ -1,5 +1,8 @@
 package ljworker.server;
 
+import java.util.List;
+import com.google.protobuf.ProtocolStringList;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import ljworker.LinuxJobServiceGrpc.LinuxJobServiceImplBase;
 import ljworker.HealthCheckRequest;
@@ -10,6 +13,7 @@ import ljworker.StatusRequest;
 import ljworker.StatusResponse;
 import ljworker.StopRequest;
 import ljworker.StopResponse;
+import ljworker.worker.Job;
 import ljworker.worker.JobManager;
 
 /** LinuxJobService handles LinuxJobWorker RPCs. */
@@ -22,12 +26,73 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
 
     @Override
     public void start(StartRequest req, StreamObserver<StartResponse> responseObserver) {
-        // TODO: handle start RPC
+        // create new job with the provided args and enqueue the job
+        ProtocolStringList args = req.getArgsList();
+        Job job = new Job(args.toArray(new String[0]));
+        jobManager.startJob(job);
+
+        // build response
+        StartResponse response = StartResponse.newBuilder()
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
     @Override
     public void startStream(StartRequest req, StreamObserver<StartResponse> responseObserver) {
-        // TODO: handle start stream RPC
+        // create new job with the provided args
+        ProtocolStringList args = req.getArgsList();
+        Job job = new Job(args.toArray(new String[0]));
+
+        // build response
+        StartResponse.Builder builder = StartResponse.newBuilder();
+
+        // Read logs from the running job every 100 ms and stream output to client.
+        new Thread() {
+            @Override
+            public void run() {
+
+                List<String> logs = job.getLogs();
+                int index = 0;
+                boolean running = true;
+                while (running) {
+
+                    // TODO: Streaming a process with a large amount of output will result in
+                    // sending too many response messages and cause an error. Current solution
+                    // is to gather the output and send a response every interval...
+                    // An error may also occur if the response message is too large...
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread()
+                                .interrupt();
+                    }
+
+                    // add all available output to response
+                    while (index < logs.size()) {
+                        String output = logs.get(index++);
+                        if (output.equals("END OF LOGS")) {
+                            running = false;
+                        } else {
+                            builder.addOutput(output);
+                        }
+                    }
+
+                    try {
+                        // send response and reset response builder
+                        StartResponse response = builder.build();
+                        responseObserver.onNext(response);
+                        builder.clearOutput();
+                    } catch (StatusRuntimeException e) {
+                        // if channel is closed, stop streaming logs
+                        return;
+                    }
+                }
+                responseObserver.onCompleted();
+            }
+        }.start();
+
+        jobManager.startJob(job);
     }
 
     @Override

@@ -14,7 +14,7 @@ public class AuthTest {
   /**
    * Test that the client and server are able to communicate. The client sends a
    * health check request, and the return status should be 'OK'.
-   * 
+   *
    * @throws IOException
    * @throws InterruptedException
    */

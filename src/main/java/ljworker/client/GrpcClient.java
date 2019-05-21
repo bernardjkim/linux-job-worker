@@ -1,6 +1,7 @@
 package ljworker.client;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLException;
@@ -14,6 +15,8 @@ import io.netty.handler.ssl.SslContextBuilder;
 import ljworker.HealthCheckRequest;
 import ljworker.HealthCheckResponse;
 import ljworker.LinuxJobServiceGrpc;
+import ljworker.StartRequest;
+import ljworker.StartResponse;
 import java.util.logging.Level;
 
 
@@ -82,7 +85,54 @@ public class GrpcClient {
      * @param args Start RPC arguments
      */
     public void start(String[] args) {
-        // TODO: start RPC
+        // create new Start Request
+        StartRequest.Builder builder = StartRequest.newBuilder();
+
+        // start at index 1 to ignore 'start' token
+        for (int index = 1; index < args.length; index++) {
+            builder.addArgs(args[index]);
+        }
+        StartRequest request = builder.build();
+
+        // send request
+        try {
+            blockingStub.start(request);
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
+                    .getCode());
+        }
+    }
+
+    /**
+     * Send start request with provided args. Stream output of process.
+     * 
+     * @param args Start RPC arguments
+     */
+    public void stream(String[] args) {
+        // create new Start Request
+        StartRequest.Builder builder = StartRequest.newBuilder();
+
+        // start at index 1 to ignore 'start' token
+        for (int index = 1; index < args.length; index++) {
+            builder.addArgs(args[index]);
+        }
+        StartRequest request = builder.build();
+
+        // send request
+        Iterator<StartResponse> response;
+        try {
+            response = blockingStub.startStream(request);
+
+            while (response.hasNext()) {
+                for (String output : response.next()
+                        .getOutputList()) {
+                    System.out.println(output);
+                }
+            }
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
+                    .getCode());
+        }
     }
 
     /**
