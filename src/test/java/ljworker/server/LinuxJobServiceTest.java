@@ -1,6 +1,9 @@
 package ljworker.server;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +14,8 @@ import javax.net.ssl.SSLException;
 import ljworker.LinuxJobServiceGrpc;
 import ljworker.StartRequest;
 import ljworker.StartResponse;
+import ljworker.StopRequest;
+import ljworker.StopResponse;
 import ljworker.server.GrpcServer;
 import org.junit.After;
 import org.junit.Before;
@@ -72,6 +77,45 @@ public class LinuxJobServiceTest {
             assertEquals(expected[i], actual[i]);
         }
         logger.info("Start RPC PASSED");
+    }
+
+    /**
+     * Test stop RPC.
+     * 
+     * Request stop for a valid id should return a StopResponse with sucess=true
+     * Request stop for a invalid id should return a StopResonse with success=false
+     */
+    @Test
+    public void stopTest() {
+        logger.info("Testing stop RPC...");
+
+        // create new Start Request
+        StartRequest.Builder startBuilder = StartRequest.newBuilder();
+        startBuilder.addArgs("echo")
+                .addArgs("test");
+        StartRequest startRequest = startBuilder.build();
+        blockingStub.start(startRequest);
+
+
+        StopRequest.Builder stopBuilder = StopRequest.newBuilder();
+        StopRequest stopRequest;
+        StopResponse stopResponse;
+
+        // 'Stop 1' should return success=true
+        stopBuilder.setId(1);
+        stopRequest = stopBuilder.build();
+        stopResponse = blockingStub.stop(stopRequest);
+        boolean success1 = stopResponse.getSuccess();
+        assertTrue(success1);
+
+        // 'Stop 2' should return success=false
+        stopBuilder.setId(2);
+        stopRequest = stopBuilder.build();
+        stopResponse = blockingStub.stop(stopRequest);
+        boolean success2 = stopResponse.getSuccess();
+        assertFalse(success2);
+
+        logger.info("Stop RPC PASSED");
     }
 
     /** Initialize server and open channel. */
