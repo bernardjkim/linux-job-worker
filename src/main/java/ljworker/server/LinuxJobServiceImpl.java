@@ -97,7 +97,6 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
 
     @Override
     public void stop(StopRequest req, StreamObserver<StopResponse> responseObserver) {
-        // build response
         StopResponse.Builder builder = StopResponse.newBuilder();
 
         // stop job with the matching id
@@ -117,7 +116,23 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
 
     @Override
     public void status(StatusRequest req, StreamObserver<StatusResponse> responseObserver) {
-        // TODO: handle status RPC
+        Job job = jobManager.getJob(req.getId());
+        StatusResponse.Builder builder = StatusResponse.newBuilder();
+
+        if (job != null) {
+            builder.setId(req.getId());
+            builder.setStatus(job.getStatus());
+            for (String arg : job.getArgs()) {
+                builder.addArgs(arg);
+            }
+            for (String log : job.getLogs()) {
+                builder.addLogs(log);
+            }
+        }
+
+        StatusResponse response = builder.build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
     @Override

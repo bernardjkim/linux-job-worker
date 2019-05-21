@@ -16,6 +16,8 @@ import io.netty.handler.ssl.SslContextBuilder;
 import ljworker.HealthCheckRequest;
 import ljworker.HealthCheckResponse;
 import ljworker.LinuxJobServiceGrpc;
+import ljworker.StatusRequest;
+import ljworker.StatusResponse;
 import ljworker.StartRequest;
 import ljworker.StartResponse;
 import ljworker.StopRequest;
@@ -162,7 +164,27 @@ public class GrpcClient {
      * @param args Status RPC arguments
      */
     public void status(String[] args) {
-        // TODO: status RPC
+        // create new Status Request
+        StatusRequest.Builder builder = StatusRequest.newBuilder();
+        builder.setId(Integer.parseInt(args[1]));
+        StatusRequest request = builder.build();
+
+        // send request
+        try {
+            StatusResponse response = blockingStub.status(request);
+            int id = response.getId();
+            String jobArgs = response.getArgsList()
+                    .toString();
+            String status = response.getStatus();
+            System.out.printf("%s\t%-50s%s\n", "id", "args", "status");
+            System.out.printf("%d\t%-50s%s\n", id, jobArgs, status);
+            for (String output : response.getLogsList()) {
+                System.out.println(output);
+            }
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
+                    .getCode());
+        }
     }
 
     /** Check if server available. Mainly just for testing purposes. */
