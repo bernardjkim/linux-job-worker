@@ -3,6 +3,7 @@ package ljworker.worker;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * JobManager will keep track of and manage the linux jobs. Provides methods to
@@ -27,6 +28,10 @@ public class JobManager {
 
     public Job getJob(int id) {
         return jobs.get(id);
+    }
+
+    public Set<Integer> keySet() {
+        return jobs.keySet();
     }
 
     public void startJob(Job job) {

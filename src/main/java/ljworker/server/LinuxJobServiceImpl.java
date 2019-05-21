@@ -5,8 +5,11 @@ import com.google.protobuf.ProtocolStringList;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import ljworker.LinuxJobServiceGrpc.LinuxJobServiceImplBase;
+import ljworker.ListResponse.JobData;
 import ljworker.HealthCheckRequest;
 import ljworker.HealthCheckResponse;
+import ljworker.ListRequest;
+import ljworker.ListResponse;
 import ljworker.StartRequest;
 import ljworker.StartResponse;
 import ljworker.StatusRequest;
@@ -134,6 +137,29 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void list(ListRequest req, StreamObserver<ListResponse> responseObserver) {
+        ListResponse.Builder builder = ListResponse.newBuilder();
+        JobData.Builder jobDataBuilder = JobData.newBuilder();
+
+        // add all currently stored jobs to list response
+        for (int id : jobManager.keySet()) {
+            Job job = jobManager.getJob(id);
+            jobDataBuilder.setId(id)
+                    .setStatus(job.getStatus());
+            for (String arg : job.getArgs()) {
+                jobDataBuilder.addArgs(arg);
+            }
+            builder.addJobData(jobDataBuilder.build());
+            jobDataBuilder.clear();
+        }
+
+        ListResponse response = builder.build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
 
     @Override
     public void healthCheck(HealthCheckRequest req, StreamObserver<HealthCheckResponse> responseObserver) {

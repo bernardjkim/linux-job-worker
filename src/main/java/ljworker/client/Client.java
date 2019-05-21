@@ -10,6 +10,7 @@ public class Client {
     private static final String STREAM = "stream";
     private static final String STOP = "stop";
     private static final String STATUS = "status";
+    private static final String LIST = "list";
 
     /** Print client commands to console. */
     public static void printUsage() {
@@ -18,10 +19,11 @@ public class Client {
         System.out.printf("\t%s\t<linux cmd>\n", STREAM);
         System.out.printf("\t%s\t<process id>\n", STOP);
         System.out.printf("\t%s\t<process id>\n", STATUS);
+        System.out.printf("\t%s\n", LIST);
     }
 
     public static void main(String[] args) throws InterruptedException {
-        if (args.length < 2) {
+        if (args.length < 1) {
             printUsage();
             return;
         }
@@ -41,8 +43,11 @@ public class Client {
             connection.stop(args);
         } else if (STATUS.equals(args[0])) {
             connection.status(args);
+        } else if (LIST.equals(args[0])) {
+            connection.list();
         } else {
             System.out.printf("invalid command: %s\n", args[0]);
+            printUsage();
         }
         connection.close();
     }
