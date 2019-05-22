@@ -14,7 +14,7 @@ public class Server {
             server.start();
             server.blockUntilShutdown();
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Unable to bind server. Port is already in use?");
+            logger.log(Level.WARNING, "Unable to bind server. Port is already in use");
         }
     }
 }

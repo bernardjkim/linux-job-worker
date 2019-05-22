@@ -23,8 +23,10 @@ public class Job implements Runnable {
     private String status;
 
     // TODO: Do we need to store the process output for a client to query at a
-    // later time? Or do we just need to worry about streaming the output while
-    // the process is running?
+    // later time?
+    // If we dont need to store logs, it would be better to use a blocking queue
+    // and have the job publish to the queue while the stream handler consumes
+    // and sends the output. This will help reduce the memory usage.
     private List<String> logs;
 
     public Job(String[] args) {

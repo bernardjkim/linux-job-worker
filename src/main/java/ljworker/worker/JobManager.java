@@ -26,14 +26,30 @@ public class JobManager {
         this.nextProcId = new AtomicInteger();
     }
 
+    /**
+     * Get the job with the match id.
+     * 
+     * @param id Job id
+     * @return Job with matching id, null if id is invalid
+     */
     public Job getJob(int id) {
         return jobs.get(id);
     }
 
+    /**
+     * Get the keyset of job ids
+     * 
+     * @return
+     */
     public Set<Integer> keySet() {
         return jobs.keySet();
     }
 
+    /**
+     * Add job to JobManager and start process.
+     * 
+     * @param job Job to execute
+     */
     public void startJob(Job job) {
         // TODO: queue jobs to maintain max # of threads
         int id = nextProcId.incrementAndGet();
@@ -41,8 +57,19 @@ public class JobManager {
         job.start();
     }
 
-    public void stopJob(int id) {
-        // TODO: handle stop job
+    /**
+     * Stop the job with the matching id
+     * 
+     * @param id Job id
+     * @return true if valid job, false o.w.
+     */
+    public boolean stopJob(int id) {
+        Job job = jobs.get(id);
+        if (job != null) {
+            job.stop();
+            return true;
+        } else {
+            return false;
+        }
     }
-
 }

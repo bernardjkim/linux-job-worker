@@ -91,7 +91,6 @@ public class GrpcClient {
      * @param args Start RPC arguments
      */
     public void start(String[] args) {
-        // create new Start Request
         StartRequest.Builder builder = StartRequest.newBuilder();
 
         // start at index 1 to ignore 'start' token
@@ -100,7 +99,6 @@ public class GrpcClient {
         }
         StartRequest request = builder.build();
 
-        // send request
         try {
             blockingStub.start(request);
         } catch (StatusRuntimeException e) {
@@ -115,18 +113,18 @@ public class GrpcClient {
      * @param args Start RPC arguments
      */
     public void stream(String[] args) {
-        // create new Start Request
         StartRequest.Builder builder = StartRequest.newBuilder();
 
-        // start at index 1 to ignore 'start' token
+        // start at index 1 to ignore 'start' token and add args
         for (int index = 1; index < args.length; index++) {
             builder.addArgs(args[index]);
         }
         StartRequest request = builder.build();
 
-        // send request
         try {
             Iterator<StartResponse> response = blockingStub.startStream(request);
+
+            // print output of job
             while (response.hasNext()) {
                 for (String output : response.next()
                         .getOutputList()) {
@@ -145,8 +143,9 @@ public class GrpcClient {
      * @param args Stop RPC arguments
      */
     public void stop(String[] args) {
-        // create new Stop Request
         StopRequest.Builder builder = StopRequest.newBuilder();
+
+        // set job id
         builder.setId(Integer.parseInt(args[1]));
         StopRequest request = builder.build();
 
@@ -165,20 +164,26 @@ public class GrpcClient {
      * @param args Status RPC arguments
      */
     public void status(String[] args) {
-        // create new Status Request
         StatusRequest.Builder builder = StatusRequest.newBuilder();
+
+        // set job id
         builder.setId(Integer.parseInt(args[1]));
         StatusRequest request = builder.build();
 
-        // send request
         try {
             StatusResponse response = blockingStub.status(request);
             int id = response.getId();
             String jobArgs = response.getArgsList()
                     .toString();
             String status = response.getStatus();
+
+            // print header row 'id'/'args'/'status'
             System.out.printf("%s\t%-50s%s\n", "id", "args", "status");
+
+            // print job data
             System.out.printf("%d\t%-50s%s\n", id, jobArgs, status);
+
+            // print logs
             for (String output : response.getLogsList()) {
                 System.out.println(output);
             }
@@ -190,20 +195,23 @@ public class GrpcClient {
 
     /** Send list request */
     public void list() {
-        // create new List Request
         ListRequest.Builder builder = ListRequest.newBuilder();
         ListRequest request = builder.build();
 
-        // send request
         try {
             ListResponse response = blockingStub.list(request);
+
+            // print header row 'id'/'args'/'status'
             System.out.printf("%s\t%-50s%s\n", "id", "args", "status");
+
+            // list all jobs
             for (JobData jobData : response.getJobDataList()) {
                 int id = jobData.getId();
                 String args = jobData.getArgsList()
                         .toString();
                 String status = jobData.getStatus();
 
+                // print job data
                 System.out.printf("%d\t%-50s%s\n", id, args, status);
             }
         } catch (StatusRuntimeException e) {
@@ -214,12 +222,11 @@ public class GrpcClient {
 
     /** Check if server available. Mainly just for testing purposes. */
     public HealthCheckResponse healthCheck() {
-        HealthCheckRequest request = HealthCheckRequest.newBuilder()
-                .build();
-        HealthCheckResponse response;
+        HealthCheckRequest.Builder builder = HealthCheckRequest.newBuilder();
+        HealthCheckRequest request = builder.build();
+
         try {
-            response = blockingStub.healthCheck(request);
-            return response;
+            return blockingStub.healthCheck(request);
         } catch (StatusRuntimeException e) {
             logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus()
                     .getCode());

@@ -34,9 +34,9 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
         Job job = new Job(args.toArray(new String[0]));
         jobManager.startJob(job);
 
-        // build response
-        StartResponse response = StartResponse.newBuilder()
-                .build();
+        StartResponse.Builder builder = StartResponse.newBuilder();
+
+        StartResponse response = builder.build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
@@ -47,14 +47,12 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
         ProtocolStringList args = req.getArgsList();
         Job job = new Job(args.toArray(new String[0]));
 
-        // build response
-        StartResponse.Builder builder = StartResponse.newBuilder();
-
         // Read logs from the running job every 100 ms and stream output to client.
         new Thread() {
             @Override
             public void run() {
 
+                StartResponse.Builder builder = StartResponse.newBuilder();
                 List<String> logs = job.getLogs();
                 int index = 0;
                 boolean running = true;
@@ -89,6 +87,8 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
                     } catch (StatusRuntimeException e) {
                         // if channel is closed, stop streaming logs
                         return;
+                    } catch (Exception e) {
+                        System.out.println("TEST");
                     }
                 }
                 responseObserver.onCompleted();
@@ -100,17 +100,14 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
 
     @Override
     public void stop(StopRequest req, StreamObserver<StopResponse> responseObserver) {
-        StopResponse.Builder builder = StopResponse.newBuilder();
-
         // stop job with the matching id
         int id = req.getId();
-        Job job = jobManager.getJob(id);
-        if (job != null) {
-            job.stop();
-            builder.setSuccess(true);
-        } else {
-            builder.setSuccess(false);
-        }
+        boolean success = jobManager.stopJob(id);
+
+        StopResponse.Builder builder = StopResponse.newBuilder();
+
+        // append success value
+        builder.setSuccess(success);
 
         StopResponse response = builder.build();
         responseObserver.onNext(response);
@@ -120,14 +117,21 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
     @Override
     public void status(StatusRequest req, StreamObserver<StatusResponse> responseObserver) {
         Job job = jobManager.getJob(req.getId());
-        StatusResponse.Builder builder = StatusResponse.newBuilder();
 
+        StatusResponse.Builder builder = StatusResponse.newBuilder();
         if (job != null) {
+            // append job id
             builder.setId(req.getId());
+
+            // append job status
             builder.setStatus(job.getStatus());
+
+            // append job args
             for (String arg : job.getArgs()) {
                 builder.addArgs(arg);
             }
+
+            // append job logs
             for (String log : job.getLogs()) {
                 builder.addLogs(log);
             }
@@ -146,8 +150,12 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
         // add all currently stored jobs to list response
         for (int id : jobManager.keySet()) {
             Job job = jobManager.getJob(id);
+
+            // append job id & status
             jobDataBuilder.setId(id)
                     .setStatus(job.getStatus());
+
+            // append job args
             for (String arg : job.getArgs()) {
                 jobDataBuilder.addArgs(arg);
             }
@@ -163,9 +171,12 @@ public class LinuxJobServiceImpl extends LinuxJobServiceImplBase {
 
     @Override
     public void healthCheck(HealthCheckRequest req, StreamObserver<HealthCheckResponse> responseObserver) {
-        HealthCheckResponse response = HealthCheckResponse.newBuilder()
-                .setStatus("OK")
-                .build();
+        HealthCheckResponse.Builder builder = HealthCheckResponse.newBuilder();
+
+        // append 'OK' status
+        builder.setStatus("OK");
+
+        HealthCheckResponse response = builder.build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
