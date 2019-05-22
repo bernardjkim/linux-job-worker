@@ -33,7 +33,10 @@ public class StreamGobbler extends Thread {
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr);
             String line = null;
-            while ((line = br.readLine()) != null) {
+
+            // Temp fix. Limit log size to 100 lines as to not fill up memory.
+            int size = 0;
+            while ((line = br.readLine()) != null && size++ < 100) {
                 logs.add("[" + type + "] " + line);
             }
         } catch (IOException e) {
