@@ -64,7 +64,7 @@ public class Job implements Runnable {
             status = COMPLETED;
             logs.add("ExitValue: " + exitVal);
         } catch (IOException e) {
-            logs.add("[ERROR]\tIOException");
+            logs.add("[ERROR]\tIOException: invalid linux cmd");
             status = FAILED;
         } catch (InterruptedException e) {
             // stop the running process

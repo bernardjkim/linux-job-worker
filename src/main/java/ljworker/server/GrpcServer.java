@@ -43,8 +43,9 @@ public class GrpcServer {
                 .build()
                 .start();
         logger.info("Server started, listening on " + PORT);
+
+        // registered shutdown hook will be run when the JVM begins shutdown
         Runtime.getRuntime()
-                // registered shutdown hook will be run when the JVM begins shutdown
                 .addShutdownHook(new Thread() {
                     @Override
                     public void run() {

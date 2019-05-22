@@ -76,12 +76,12 @@ public class GrpcClient {
     /** Once the channel is closed new incoming RPCs will be cancelled. */
     public void close() {
         try {
-            // NOTE: need to await termination o.w. might not properly close channel
+            // NOTE: need to await termination to properly close channel
             channel.shutdown()
                     .awaitTermination(1, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Thread.currentThread()
+                    .interrupt();
         }
     }
 
